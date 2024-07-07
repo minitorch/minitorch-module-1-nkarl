@@ -3,17 +3,31 @@ from typing import Tuple
 import pytest
 
 import minitorch
-from minitorch import Context, ScalarFunction, ScalarHistory
+from minitorch import Context, ScalarFunction, ScalarHistory, printinfo, dot
+
+import graphviz
 
 # ## Task 1.3 - Tests for the autodifferentiation machinery.
 
 # Simple sanity check and debugging tests.
 
 
+class Function0(ScalarFunction):
+    @staticmethod
+    def forward(ctx: Context, x: float, y: float) -> float:
+        ctx.save_for_backward(x, y)
+        return minitorch.operators.id(x + y)
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
+        return d_output, d_output
+
+
 class Function1(ScalarFunction):
     @staticmethod
     def forward(ctx: Context, x: float, y: float) -> float:
         "$f(x, y) = x + y + 10$"
+        ctx.save_for_backward(x, y)
         return x + y + 10
 
     @staticmethod
@@ -100,6 +114,18 @@ def test_chain_rule4() -> None:
 
 # Main tests are in test_scalar.py
 
+@pytest.mark.task1_4
+def test_backprop0() -> None:
+    var1 = minitorch.Scalar(1.0)
+    var2 = minitorch.Scalar(2.0)
+    var3 = Function0.apply(var1, var2)
+    var4 = Function0.apply(var3, var2)
+    # var2 = Function0.apply(2.0, var1)
+    # var3 = Function0.apply(3, var2)
+    d = 1.0
+    var4.backward(d)
+    # printinfo(var1)
+    assert var1.derivative == 6
 
 @pytest.mark.task1_4
 def test_backprop1() -> None:
@@ -113,21 +139,22 @@ def test_backprop1() -> None:
 @pytest.mark.task1_4
 def test_backprop2() -> None:
     # Example 2: F1(0, 0)
-    var = minitorch.Scalar(0)
-    var2 = Function1.apply(0, var)
+    var1 = minitorch.Scalar(0)
+    var2 = Function1.apply(0, var1)
     var3 = Function1.apply(0, var2)
     var3.backward(d_output=5)
-    assert var.derivative == 5
+    assert var1.derivative == 5
 
 
 @pytest.mark.task1_4
 def test_backprop3() -> None:
     # Example 3: F1(F1(0, v1), F1(0, v1))
-    var1 = minitorch.Scalar(0)
-    var2 = Function1.apply(0, var1)
-    var3 = Function1.apply(0, var1)
-    var4 = Function1.apply(var2, var3)
-    var4.backward(d_output=5)
+    var1 = minitorch.Scalar(1)  # 0
+    var2 = Function1.apply(var1, 2)     # 13 == 01 + 02 + 10
+    var3 = Function1.apply(var2, 3)     # 26 == 13 + 03 + 10
+    var4 = Function1.apply(var3, var2)  # 49 == 26 + 13 + 10
+    d = 0
+    var4.backward(d_output=d)
     assert var1.derivative == 10
 
 

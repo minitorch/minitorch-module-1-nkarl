@@ -5,8 +5,8 @@ from typing import Any, Iterable, Optional, Sequence, Tuple, Type, TypeAlias
 
 import numpy as np
 
-from .autodiff import Context, Variable, backpropagate, central_difference
-from .scalar_functions import (
+from minitorch.autodiff import Context, Variable, backpropagate, central_difference
+from minitorch.scalar_functions import (
     EQ,
     LT,
     Add,
@@ -42,7 +42,8 @@ class ScalarHistory:
 # ## Task 1.2 and 1.4
 # Scalar Forward and Backward
 
-_var_count = 0  # BUG: sneaky author.
+# BUG: for simplicity, but remember a global var is a disaster waiting to happen.
+_var_count = 0
 
 
 class Scalar:
@@ -59,6 +60,8 @@ class Scalar:
     data: float
     unique_id: int
     name: str
+    graph: Iterable[Variable] = None
+    d_dict: dict = {"Nothing": "Nothing"}
 
     def __init__(
         self,
@@ -145,24 +148,31 @@ class Scalar:
 
     def is_leaf(self) -> bool:
         "True if this variable created by the user (no `last_fn`)"
-        return self.history is not None and self.history.last_fn is None
+        return self.history.last_fn is None
 
     def is_constant(self) -> bool:
-        return self.history is None
+        return self.history is None and self.derivative is None
 
     @property
     def parents(self) -> Iterable[Variable]:
         assert self.history is not None
-        return self.history.inputs
+        return self.history.inputs  # NOTE: really unnecessary, makes code bloated
 
     def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
-        h = self.history
-        assert h is not None
-        assert h.last_fn is not None
-        assert h.ctx is not None
+        """
+        actually don't know what this function does.
+        """
+        history: ScalarHistory = self.history
+        assert history is not None
+        assert history.last_fn is not None
+        assert history.ctx is not None
 
-        # TODO: Implement for Task 1.3.
-        raise NotImplementedError("Need to implement for Task 1.3")
+        # NOTE: `d` and `parents` should have the same dimensions
+        partials = history.last_fn.backward(history.ctx, d_output)
+        # return list(zip(self.parents, partials))
+        for i, each in enumerate(self.history.inputs):
+            if not each.is_constant():
+                yield (each, partials[i] if isinstance(partials, tuple) else partials)
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """
@@ -186,7 +196,7 @@ def derivative_check(f: Any, *scalars: Scalar) -> None:
         f : function from n-scalars to 1-scalar.
         *scalars  : n input scalar values.
     """
-    out = f(*scalars)
+    out = f(scalars)
     out.backward()
 
     err_msg = """
