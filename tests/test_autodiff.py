@@ -1,11 +1,10 @@
 from typing import Tuple
 
+import graphviz
 import pytest
 
 import minitorch
-from minitorch import Context, ScalarFunction, ScalarHistory, printinfo, dot
-
-import graphviz
+from minitorch import Context, ScalarFunction, ScalarHistory, dot, printinfo
 
 # ## Task 1.3 - Tests for the autodifferentiation machinery.
 
@@ -114,6 +113,7 @@ def test_chain_rule4() -> None:
 
 # Main tests are in test_scalar.py
 
+
 @pytest.mark.task1_4
 def test_backprop0() -> None:
     var1 = minitorch.Scalar(1.0)
@@ -126,6 +126,7 @@ def test_backprop0() -> None:
     var4.backward(d)
     # printinfo(var1)
     assert var1.derivative == 6
+
 
 @pytest.mark.task1_4
 def test_backprop1() -> None:
@@ -150,8 +151,8 @@ def test_backprop2() -> None:
 def test_backprop3() -> None:
     # Example 3: F1(F1(0, v1), F1(0, v1))
     var1 = minitorch.Scalar(1)  # 0
-    var2 = Function1.apply(var1, 2)     # 13 == 01 + 02 + 10
-    var3 = Function1.apply(var2, 3)     # 26 == 13 + 03 + 10
+    var2 = Function1.apply(var1, 2)  # 13 == 01 + 02 + 10
+    var3 = Function1.apply(var2, 3)  # 26 == 13 + 03 + 10
     var4 = Function1.apply(var3, var2)  # 49 == 26 + 13 + 10
     d = 0
     var4.backward(d_output=d)

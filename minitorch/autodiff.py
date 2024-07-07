@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Iterable, List, Tuple
 
-from typing_extensions import Protocol
 import graphviz
+from typing_extensions import Protocol
 
 # ## Task 1.1
 # Central Difference calculation
@@ -117,7 +117,7 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     graph = topological_sort(variable)
     print("BEOFRE-------------------------------------------------")
     # for each in graph:
-        # printinfo(each)
+    # printinfo(each)
     d_dict = {}
     d_dict[variable.unique_id] = deriv
 
@@ -139,11 +139,11 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
             )
             # print(f"out={out}")
             # for v, d_part in out:
-                # d_dict[v.unique_id] = d_dict.get(v.unique_id, deriv)
-                # dot.node(
-                    # name=f"{v.unique_id}",
-                    # label=f"INNER {v.unique_id}\nd={d_part},\ndata={v.data},\ngrad={v.derivative}",
-                # )
+            # d_dict[v.unique_id] = d_dict.get(v.unique_id, deriv)
+            # dot.node(
+            # name=f"{v.unique_id}",
+            # label=f"INNER {v.unique_id}\nd={d_part},\ndata={v.data},\ngrad={v.derivative}",
+            # )
             # dot.edge(f"{v.unique_id}", f"{var.unique_id}")
         else:
             # BUG: only 1 leaf has grad, the rest do not
@@ -165,7 +165,7 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     print("AFTER-------------------------------------------------")
     # print(f"graph ={graph}")
     # for each in graph:
-        # printinfo(each)
+    # printinfo(each)
     print(f"d_dict={d_dict}")
 
     variable.graph = graph if graph else ["Something wrong"]
